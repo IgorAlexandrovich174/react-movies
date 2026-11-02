@@ -1,18 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { MoviesList } from "../components/MoviesList.jsx";
 import { Preloader } from "../components/Preloader.jsx";
 import { Search } from "../components/Search.jsx";
 
 const apiKey = import.meta.env.VITE_OMDB_API_KEY;
 
-class Main extends React.Component {
-    state = {
-        movies: [],
-        loading: true
-    }
+export default function Main() {
+    const [movies, setMovies] = useState([])
+    const [loading, setLoading] = useState(true)
 
-    basicFetch = (searchValue, type = 'all') => {
-        this.setState({ loading: true });
+    const basicFetch = (searchValue, type = 'all') => {
+        setLoading(true)
 
         const typeQuery = type !== 'all' ? `&type=${type}` : '';
 
@@ -22,37 +20,32 @@ class Main extends React.Component {
                 else throw new Error('Network error');
             })
             .then(data => {
-                this.setState({ movies: data.Search || [], loading: false });
+                setMovies(data.Search || [])
+                setLoading(false)
             })
             .catch(() => {
-                this.setState({ loading: false });
+                setLoading(false)
             });
     }
 
-    handleSearch = (searchValue, type) => {
-        this.basicFetch(searchValue, type);
+    const handleSearch = (searchValue, type) => {
+       basicFetch(searchValue, type);
     }
 
-    render() {
-        const { movies, loading } = this.state;
-        return (
-            <main className='container content'>
-                <Search handleSearch={this.handleSearch}/>
+    useEffect(() => {
+        basicFetch('matrix');
+    }, [])
 
-                {loading ? (
-                    <Preloader />
-                ) : movies.length ? (
-                    <MoviesList moviesList={movies}/>
-                ) : (
-                    <h4>Nothing found</h4>
-                )}
-            </main>
-        );
-    }
-
-    componentDidMount() {
-        this.basicFetch('matrix');
-    }
+    return (
+        <main className='container content'>
+            <Search handleSearch={handleSearch}/>
+            {loading ? (
+                <Preloader />
+            ) : movies.length ? (
+                <MoviesList moviesList={movies}/>
+            ) : (
+                <h4>Nothing found</h4>
+            )}
+        </main>
+    );
 }
-
-export { Main };
